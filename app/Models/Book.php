@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 
 class Book extends Model
@@ -21,16 +22,36 @@ class Book extends Model
         return $query->where('title','LIKE','%' . $title . '%');
     }
 
-    public function scopePopular(Builder $query): Builder
+    public function scopePopular(Builder $query, $from = null, $to=null): Builder|QueryBuilder
     {
-        return $query->withCount('reviews')
-            ->orderBy('reviews_count','desc');
+        return $query->withCount([
+            'reviews' => fn(Builder $q) => $this->dateRangeFilter($q, $from, $to)
+        ])
+            ->orderBy('reviews_count', 'desc');
     }
 
-    public function scopeHighestRated(Builder $query): Builder
+    public function scopeHighestRated(Builder $query,  $from = null, $to=null): Builder|QueryBuilder
     {
-        return $query->withAvg('reviews', 'rating')
+        return $query->withAvg([
+        'reviews' => fn(Builder $q) => $this->dateRangeFilter($q, $from, $to) 
+        ], 'rating')
             ->orderBy('reviews_avg_rating','desc');
+    }
+
+    public function scopeMinReviews(Builder $query, int $minReviews): Builder|QueryBuilder
+    {
+        return $query->having('reviews_count', '>=', $minReviews);
+    }
+
+    public function dateRangeFilter(Builder $query, $from = null, $to = null)
+    {
+        if($from && !$to) {
+            $query->where('created_at', '>=', $from);
+        }elseif (!$from && $to) {
+            $query->where('created_at', '<=', $to);
+        }elseif ($from && $to) {
+            $query->whereBetween('created_at', [$from, $to]);
+        }
     }
 }
 
@@ -65,3 +86,11 @@ class Book extends Model
 // 4. **`get()`**: Executes the query and retrieves the results as a collection. This collects the books that meet the criteria specified by the `popular` and `highestRated` scopes.
 
 // In summary, the query is retrieving a collection of books from the `Book` model based on two custom scopes or methods: one for "popular" books and another for "highest rated" books. The specific criteria for popularity and highest rating are determined by the implementation of these scopes or methods in the `Book` model.
+
+
+// \App\Models\Book::highestRated('2023-01-01', '2023-03-30')
+// ->minReviews(2)->get(); will not work because first we need to load reviews_count
+
+// \App\Models\Book::highestRated('2023-01-01', '2023-03-30')
+// ->popular('2023-01-01', '2023-03-30')
+// ->minReviews(2)->get(); will work properly 
