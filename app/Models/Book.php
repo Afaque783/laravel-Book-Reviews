@@ -48,7 +48,7 @@ class Book extends Model
         if($from && !$to) {
             $query->where('created_at', '>=', $from);
         }elseif (!$from && $to) {
-            $query->where('created_at', '<=', $to);
+            $query->where(+'created_at', '<=', $to);
         }elseif ($from && $to) {
             $query->whereBetween('created_at', [$from, $to]);
         }
@@ -68,7 +68,7 @@ class Book extends Model
 
 // \App\Models\Book::limit(5)->withAvg('reviews', 'rating')->orderBy('reviews_avg_rating')->get();
 
-// \App\Models\Book::withCount('reviews')->withAvg('reviews',
+// \App\Models\Book::with6Count('reviews')->withAvg('reviews',
 //  'rating')->having('reviews_count', '>=', 10)->orderBy('revi
 // ews_avg_rating','desc')->limit(10)->get();
 
