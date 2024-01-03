@@ -48,7 +48,7 @@ class Book extends Model
         if($from && !$to) {
             $query->where('created_at', '>=', $from);
         }elseif (!$from && $to) {
-            $query->where(+'created_at', '<=', $to);
+            $query->where('created_at', '<=', $to);
         }elseif ($from && $to) {
             $query->whereBetween('created_at', [$from, $to]);
         }
