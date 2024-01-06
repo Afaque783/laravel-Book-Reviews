@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,12 +16,17 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('books.index');
 });
 
 
 // `Route::resource` in Laravel generates RESTful routes, following conventions for CRUD operations, reducing boilerplate code, promoting RESTful design, and providing consistent naming. This single command streamlines route declaration, maps controller methods, and automates URL generation, enhancing code organization and development efficiency. It's especially advantageous for resource controllers, simplifying the process of defining routes and improving overall code readability and maintainability.
-Route::resource('books',BookController::class);
+Route::resource('books', BookController::class)
+    ->only(['index', 'show']);
+
+Route::resource('books.reviews', ReviewController::class)
+    ->scoped(['review' => 'book'])
+    ->only(['create', 'store']);
 
 
 
